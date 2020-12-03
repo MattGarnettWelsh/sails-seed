@@ -1,41 +1,43 @@
 {
-  "name": "sails-seed",
-  "version": "0.5.0",
-  "description": "Simple data seeding for sails.js projects.",
-  "main": "index.js",
-  "scripts": {
-    "test": "./node_modules/mocha/bin/mocha ./test --recursive --check-leaks",
-    "postinstall": "node scripts/postinstall",
-    "test-cov": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- -R spec",
-    "coverall": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/frostme/sails-seed.git"
-  },
-  "keywords": [
-    "sails",
-    "seed",
-    "data"
-  ],
-  "author": "frostme",
-  "license": "ISC",
-  "sails": {
-    "isHook": true
-  },
-  "dependencies": {
-    "async": "^0.9.2",
-    "extend": "^2.0.0",
-    "lodash": "^3.7.0",
-    "semver": "^4.3.3"
-  },
-  "devDependencies": {
-    "chai": "^2.2.0",
-    "coveralls": "^2.11.2",
-    "istanbul": "^0.3.14",
-    "lodash": "^3.9.3",
-    "mocha": "^2.2.4",
-    "mocha-lcov-reporter": "0.0.2",
-    "sinon": "^1.14.1"
-  }
+    "name": "sails-seed",
+    "version": "0.5.0",
+    "description": "Simple data seeding for sails.js projects.",
+    "main": "index.js",
+    "scripts": {
+        "test": "./node_modules/mocha/bin/mocha ./test --recursive --check-leaks",
+        "test-cov": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- -R spec",
+        "coverall": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/frostme/sails-seed.git"
+    },
+    "keywords": [
+        "sails",
+        "seed",
+        "data"
+    ],
+    "author": "frostme",
+    "license": "ISC",
+    "sails": {
+        "isHook": true
+    },
+    "dependencies": {
+        "async": "^0.9.2",
+        "extend": "^2.0.0",
+        "lodash": "^3.7.0",
+        "semver": "^4.3.3"
+    },
+    "devDependencies": {
+        "chai": "^2.2.0",
+        "coveralls": "^2.11.2",
+        "eslint": "^7.14.0",
+        "eslint-config-airbnb-base": "^14.2.1",
+        "eslint-plugin-import": "^2.22.1",
+        "istanbul": "^0.3.14",
+        "lodash": "^3.9.3",
+        "mocha": "^2.2.4",
+        "mocha-lcov-reporter": "0.0.2",
+        "sinon": "^1.14.1"
+    }
 }
