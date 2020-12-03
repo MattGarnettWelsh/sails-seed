@@ -1,50 +1,16 @@
-"use strict";
+// dependencies
+let async = require("async");
+let path = require("path");
 
-//dependencies
-var async = require("async"),
-    path = require("path"),
-    libPath = path.join(__dirname, "lib");
+let libPath = path.join(__dirname, "lib");
 
 // model extras
-var seed = require(path.join(libPath, "seed")),
-    seedArray = require(path.join(libPath, "seedArray")),
-    seedObject = require(path.join(libPath, "seedObject"));
-
-module.exports = function (sails) {
-    return {
-        initialize: function (done) {
-            //later on wait for this/these event(s)
-            //to apply methods to models
-            var eventsToWaitFor = [];
-
-            //wait for orm
-            //and pub sub hooks
-            //to be loaded
-            //for methods to
-            //be attached to models
-            if (sails.hooks.orm) eventsToWaitFor.push("hook:orm:loaded");
-            if (sails.hooks.pubsub) eventsToWaitFor.push("hook:pubsub:loaded");
-
-            sails.after(eventsToWaitFor, function () {
-                //bind additional methods
-                //to models
-                //then seed models
-                //and let sails continue
-
-                patchAttributes(function () {
-                    patch(function () {
-                        seeds(done);
-                    });
-                });
-            });
-        },
-    };
-};
+let seed = require(path.join(libPath, "seed"));
+let seedArray = require(path.join(libPath, "seedArray"));
+let seedObject = require(path.join(libPath, "seedObject"));
 
 function getModelsByPriority() {
-    return _.sortBy(_.keys(sails.models), function (key) {
-        return sails.models[key].priority;
-    });
+    return _.sortBy(_.keys(sails.models), (key) => sails.models[key].priority);
 }
 
 function seeds(callback) {
@@ -53,7 +19,7 @@ function seeds(callback) {
     } else {
         async.eachSeries(
             getModelsByPriority(),
-            function (model, cb) {
+            (model, cb) => {
                 if (
                     sails.models[model].seed &&
                     sails.config.seeds[model] &&
@@ -64,7 +30,7 @@ function seeds(callback) {
                     cb();
                 }
             },
-            function (err) {
+            (err) => {
                 if (err)
                     sails.log.error("Your seeds were not planted correctly");
                 else sails.log.info("Your seeds are ready to grow!");
@@ -76,17 +42,16 @@ function seeds(callback) {
 function patch(cb) {
     async.each(
         _.toArray(sails.models),
-        function (model, callback) {
+        async (model, callback) => {
             if (model.globalId) {
                 await seed(model);
                 await seedArray(model);
                 await seedObject(model);
+
                 callback();
-            } else {
-                callback();
-            }
+            } else callback();
         },
-        function () {
+        () => {
             cb();
         }
     );
@@ -95,10 +60,10 @@ function patch(cb) {
 function patchAttributes(callback) {
     async.each(
         _.toArray(sails.models),
-        function (model, cb) {
-            var data = sails.config.seeds[model.identity];
+        (model, cb) => {
+            let data = sails.config.seeds[model.identity];
             if (data) {
-                var extend = {};
+                let extend = {};
                 if (
                     _.some(
                         [data.overwrite, data.unique, data.priority],
@@ -124,8 +89,39 @@ function patchAttributes(callback) {
                 cb();
             }
         },
-        function () {
+        () => {
             callback();
         }
     );
 }
+
+module.exports = function initializeHook(sails) {
+    return {
+        initialize: function (done) {
+            // later on wait for this/these event(s)
+            // to apply methods to models
+            let eventsToWaitFor = [];
+
+            // wait for orm
+            // and pub sub hooks
+            // to be loaded
+            // for methods to
+            // be attached to models
+            if (sails.hooks.orm) eventsToWaitFor.push("hook:orm:loaded");
+            if (sails.hooks.pubsub) eventsToWaitFor.push("hook:pubsub:loaded");
+
+            sails.after(eventsToWaitFor, () => {
+                // bind additional methods
+                // to models
+                // then seed models
+                // and let sails continue
+
+                patchAttributes(() => {
+                    patch(() => {
+                        seeds(done);
+                    });
+                });
+            });
+        },
+    };
+};
