@@ -26,73 +26,65 @@ function seeds(callback) {
                     !(sails.config.seeds[model].active === false)
                 ) {
                     sails.models[model].seed(cb);
-                } else {
-                    cb();
-                }
+                } else cb();
             },
             (err) => {
                 if (err)
                     sails.log.error("Your seeds were not planted correctly");
                 else sails.log.info("Your seeds are ready to grow!");
-                callback();
+
+                return callback();
             }
         );
     }
 }
-function patch(cb) {
-    async.each(
-        _.toArray(sails.models),
-        async (model, callback) => {
-            if (model.globalId) {
-                await seed(model);
-                await seedArray(model);
-                await seedObject(model);
+async function patch() {
+    let models = _.toArray(sails.models);
 
-                callback();
-            } else callback();
-        },
-        () => {
-            cb();
+    for (let i = 0; i < models.length; i++) {
+        const model = models[i];
+
+        if (model.globalId) {
+            await seed(model);
+            await seedArray(model);
+            await seedObject(model);
         }
-    );
+    }
 }
 
-function patchAttributes(callback) {
-    async.each(
-        _.toArray(sails.models),
-        (model, cb) => {
-            let data = sails.config.seeds[model.identity];
-            if (data) {
-                let extend = {};
-                if (
-                    _.some(
-                        [data.overwrite, data.unique, data.priority],
-                        _.isDefined
-                    )
-                ) {
-                    extend.seedData = data.data ? data.data : [];
-                    extend.overwrite = data.overwrite;
-                    extend.unique = data.unique;
-                    extend.priority = data.priority;
-                } else {
-                    extend.seedData = data;
-                    extend.overwrite = false;
-                    extend.priority = 0;
-                }
+async function patchAttributes() {
+    let models = _.toArray(sails.models);
 
-                _.extend(model, extend);
-                cb();
+    for (let i = 0; i < models.length; i++) {
+        const model = models[i];
+
+        let data = sails.config.seeds[model.identity];
+
+        if (data) {
+            let extend = {};
+            if (
+                _.some(
+                    [data.overwrite, data.unique, data.priority],
+                    _.isDefined
+                )
+            ) {
+                extend.seedData = data.data ? data.data : [];
+                extend.overwrite = data.overwrite;
+                extend.unique = data.unique;
+                extend.priority = data.priority;
             } else {
-                _.extend(model, {
-                    seedData: null,
-                });
-                cb();
+                extend.seedData = data;
+                extend.overwrite = false;
+                extend.priority = 0;
             }
-        },
-        () => {
-            callback();
+
+            _.extend(model, extend);
+        } else {
+            _.extend(model, {
+                seedData: null,
+            });
         }
-    );
+    }
 }
 
 module.exports = function initializeHook(sails) {
@@ -110,17 +102,16 @@ module.exports = function initializeHook(sails) {
             if (sails.hooks.orm) eventsToWaitFor.push("hook:orm:loaded");
             if (sails.hooks.pubsub) eventsToWaitFor.push("hook:pubsub:loaded");
 
-            sails.after(eventsToWaitFor, () => {
+            sails.after(eventsToWaitFor, async () => {
                 // bind additional methods
                 // to models
                 // then seed models
                 // and let sails continue
 
-                patchAttributes(() => {
-                    patch(() => {
-                        seeds(done);
-                    });
-                });
+                await patchAttributes();
+                await patch();
+
+                seeds(done);
             });
         },
     };
