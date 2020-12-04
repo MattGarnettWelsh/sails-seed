@@ -1,5 +1,4 @@
 // dependencies
-let async = require("async");
 let path = require("path");
 
 let libPath = path.join(__dirname, "lib");
@@ -13,31 +12,30 @@ function getModelsByPriority() {
     return _.sortBy(_.keys(sails.models), (key) => sails.models[key].priority);
 }
 
-function seeds(callback) {
-    if (sails.config.seeds.disable) {
-        callback();
-    } else {
-        async.eachSeries(
-            getModelsByPriority(),
-            (model, cb) => {
+async function seedModels() {
+    let models = getModelsByPriority();
+
+    if (!sails.config.seeds.disable) {
+        try {
+            sails.log.info("Your seeds are ready to grow!");
+
+            for (let i = 0; i < models.length; i++) {
+                const model = models[i];
+
                 if (
                     sails.models[model].seed &&
                     sails.config.seeds[model] &&
                     !(sails.config.seeds[model].active === false)
-                ) {
-                    sails.models[model].seed(cb);
-                } else cb();
-            },
-            (err) => {
-                if (err)
-                    sails.log.error("Your seeds were not planted correctly");
-                else sails.log.info("Your seeds are ready to grow!");
-
-                return callback();
+                )
+                    await sails.models[model].seed();
             }
-        );
-    }
+        } catch (err) {
+            sails.log.error("Your seeds were not planted correctly");
+            sails.log.error(err);
+        }
+    } else sails.log.info("Seeds are disabled");
 }
+
 async function patch() {
     let models = _.toArray(sails.models);
 
@@ -111,7 +109,9 @@ module.exports = function initializeHook(sails) {
                 await patchAttributes();
                 await patch();
 
-                seeds(done);
+                await seedModels();
+
+                done();
             });
         },
     };
